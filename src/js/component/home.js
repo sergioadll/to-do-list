@@ -11,7 +11,6 @@ export class Home extends React.Component {
 			newTask: "",
 			baseUrl: "https://assets.breatheco.de/apis/fake/todos/user/sergio"
 		};
-		this.todos = [];
 	}
 	async loadTodos() {
 		var requestOptions = {
@@ -25,23 +24,22 @@ export class Home extends React.Component {
 				element.id = index;
 				return element;
 			});
-			this.state.todos = todoList;
+			this.setState({ ...this.state, todos: todoList });
 			console.log(todoList);
 		} catch (error) {
 			console.log("error", error);
 		}
 	}
-	async modifyTodos() {
+	async modifyTodos(todos) {
 		var requestOptions = {
 			method: "PUT",
-			body: JSON.stringify(this.state.todos),
+			body: JSON.stringify(todos),
 			headers: { "Content-Type": "application/json" },
 			redirect: "follow"
 		};
 		try {
 			let res = await fetch(this.state.baseUrl, requestOptions);
 			let result = await res.json();
-			console.log("try", this.state.todos);
 			console.log(result);
 		} catch (error) {
 			console.log("error", error);
@@ -52,26 +50,31 @@ export class Home extends React.Component {
 	}
 	addTask(e) {
 		e.preventDefault();
-
+		let newTodos = this.state.todos.concat([
+			{
+				label: this.state.newTask,
+				done: false,
+				id: Math.random() * 10
+			}
+		]);
 		this.setState({
-			todos: this.state.todos.concat([
-				{
-					label: this.state.newTask,
-					done: false,
-					id: Math.random() * 10
-				}
-			]),
+			...this.state,
+			todos: newTodos,
 			newTask: ""
 		});
-		this.modifyTodos();
+
+		this.modifyTodos(newTodos);
 		return false;
 	}
 	deleteTask(id) {
+		let newTodos = this.state.todos.filter(task => task.id != id);
+		console.log("newtodos", newTodos);
 		this.setState({
-			todos: this.state.todos.filter(task => task.id != id) //returns all the task but the one that we want to eliminate
+			...this.state,
+			todos: newTodos //returns all the task but the one that we want to eliminate
 		});
-		let todos = this.state.todos;
-		this.modifyTodos(todos);
+
+		this.modifyTodos(newTodos);
 	}
 
 	render() {
@@ -114,6 +117,9 @@ export class Home extends React.Component {
 					</button>
 				</div>
 				<ul className="list-group">{todoList}</ul>
+				<li className="list-group-item bg-secondary font-weight-bold">
+					{this.state.todos.length} items left
+				</li>
 			</div>
 		);
 	}
